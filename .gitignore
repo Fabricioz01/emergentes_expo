@@ -1,0 +1,11 @@
+# Node.js
+node_modules/
+*.log
+
+# Angular
+dist/
+.angular/
+
+# Archivos temporales
+*.tmp
+*.temp
