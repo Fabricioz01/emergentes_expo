@@ -1,13 +1,91 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>IotTemperatureFrontend</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
-<body>
-  <app-root></app-root>
-</body>
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>🤖 Robot IoT Explorer - Sistema de Monitoreo de Temperatura</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Simulación interactiva de un robot IoT explorando diferentes ambientes y monitoreando temperatura"
+    />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!-- Fuentes para mejor experiencia visual -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Orbitron", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        overflow-x: hidden;
+      }
+
+      /* Loading animation while app loads */
+      .loading-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 9999;
+      }
+
+      .loading-robot {
+        font-size: 4rem;
+        animation: robotBounce 1.5s ease-in-out infinite;
+      }
+
+      .loading-text {
+        color: white;
+        font-size: 1.5rem;
+        margin-top: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      @keyframes robotBounce {
+        0%,
+        100% {
+          transform: scale(1) rotate(0deg);
+        }
+        50% {
+          transform: scale(1.1) rotate(5deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading-container" id="loading">
+      <div class="loading-robot">🤖</div>
+      <div class="loading-text">Inicializando Robot IoT Explorer...</div>
+    </div>
+
+    <app-root></app-root>
+
+    <script>
+      // Hide loading screen once Angular app loads
+      window.addEventListener("load", function () {
+        setTimeout(function () {
+          const loading = document.getElementById("loading");
+          if (loading) {
+            loading.style.opacity = "0";
+            loading.style.transition = "opacity 0.5s ease-out";
+            setTimeout(() => loading.remove(), 500);
+          }
+        }, 1000);
+      });
+    </script>
+  </body>
 </html>
