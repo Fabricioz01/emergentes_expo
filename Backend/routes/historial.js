@@ -295,12 +295,9 @@ router.get('/rango', async (req, res) => {
       });
     }
 
-    // Ajustar las fechas para incluir todo el día
-    const fechaInicio = new Date(inicio);
-    fechaInicio.setHours(0, 0, 0, 0); // Inicio del día
-    
-    const fechaFin = new Date(fin);
-    fechaFin.setHours(23, 59, 59, 999); // Final del día
+    // Ajustar las fechas para incluir todo el día usando UTC
+    const fechaInicio = new Date(inicio + 'T00:00:00.000Z');
+    const fechaFin = new Date(fin + 'T23:59:59.999Z');
     
     console.log('📅 Fechas ajustadas:', { 
       fechaInicio: fechaInicio.toISOString(), 

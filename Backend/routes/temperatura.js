@@ -90,7 +90,7 @@ router.post('/temperatura', async (req, res) => {
         ubicacion: ubicacion || 'Ubicación desconocida',
         sensor_id: sensor_id || 'sensor_default',
       });
-      
+
       await crearRegistroHistorial({
         facultad_id: facultadId,
         facultad_nombre: ubicacion || 'Ubicación desconocida',
@@ -99,7 +99,7 @@ router.post('/temperatura', async (req, res) => {
         ubicacion: ubicacion || 'Ubicación desconocida',
         sensor_id: sensor_id || 'sensor_default',
       });
-      
+
       console.log('✅ Registro de historial creado exitosamente');
     } catch (historialError) {
       console.warn('⚠️ Error creando registro de historial:', historialError);

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
@@ -15,6 +15,7 @@ Chart.register(...registerables);
   selector: 'app-historial',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  styleUrls: ['./historial.component.css'],
   template: `
     <div class="historial-container">
       <!-- Header -->
@@ -193,18 +194,10 @@ Chart.register(...registerables);
       </div>
     </div>
   `,
-  styles: [
-    `
-      .historial-container {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-        padding: 20px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      }
-    `,
-  ],
 })
-export class HistorialComponent implements OnInit, OnDestroy {
+export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('historialChart', { static: false }) historialChartRef!: ElementRef<HTMLCanvasElement>;
+
   historialData: HistorialFacultad[] = [];
   estadisticasFacultades: EstadisticasFacultad[] = [];
   resumenGeneral: ResumenFacultades | null = null;
@@ -237,6 +230,10 @@ export class HistorialComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarDatos();
+  }
+
+  ngAfterViewInit(): void {
+    // El gráfico se actualizará cuando se carguen los datos
   }
 
   ngOnDestroy(): void {
@@ -406,11 +403,111 @@ export class HistorialComponent implements OnInit, OnDestroy {
   }
 
   private actualizarGrafico(): void {
-    // Implementación del gráfico se agregará después
-    console.log(
-      'Actualizando gráfico con',
-      this.historialData.length,
-      'registros'
-    );
+    if (!this.historialData || this.historialData.length === 0) {
+      console.log('No hay datos para el gráfico');
+      return;
+    }
+
+    // Verificar que el ViewChild esté disponible
+    if (!this.historialChartRef) {
+      console.log('Canvas del gráfico aún no está disponible');
+      setTimeout(() => this.actualizarGrafico(), 100);
+      return;
+    }
+
+    console.log('Actualizando gráfico con', this.historialData.length, 'registros');
+
+    // Destruir gráfico anterior si existe
+    if (this.chart) {
+      this.chart.destroy();
+    }
+
+    // Preparar datos para el gráfico
+    const datos = this.historialData.slice(0, 20).reverse(); // Últimos 20 registros
+    const labels = datos.map(d => new Date(d.fecha).toLocaleString('es', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }));
+    const facultades = datos.map(d => d.facultad_nombre);
+
+    // Crear datasets por facultad
+    const facultadesUnicas = [...new Set(facultades)];
+    const colores = [
+      '#667eea', '#764ba2', '#f093fb', '#f5576c', 
+      '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'
+    ];
+
+    const datasets = facultadesUnicas.map((facultad, index) => {
+      const datosFacultad = datos
+        .map((d, i) => d.facultad_nombre === facultad ? { x: i, y: d.temperatura } : null)
+        .filter(d => d !== null);
+
+      return {
+        label: facultad,
+        data: datosFacultad,
+        borderColor: colores[index % colores.length],
+        backgroundColor: colores[index % colores.length] + '20',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4
+      };
+    });
+
+    // Crear gráfico usando ViewChild
+    const canvas = this.historialChartRef.nativeElement;
+    
+    this.chart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Tendencias de Temperatura por Facultad',
+            font: { size: 16, weight: 'bold' }
+          },
+          legend: {
+            display: true,
+            position: 'top'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: 'Temperatura (°C)'
+            },
+            grid: {
+              color: '#e2e8f0'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Fecha y Hora'
+            },
+            grid: {
+              color: '#e2e8f0'
+            }
+          }
+        },
+        elements: {
+          point: {
+            radius: 4,
+            hoverRadius: 6
+          }
+        }
+      }
+    });
+
+    console.log('✅ Gráfico actualizado exitosamente');
   }
 }
