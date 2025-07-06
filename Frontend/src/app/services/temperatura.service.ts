@@ -1,70 +1,51 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import {
-  LecturaTemperatura,
-  ApiResponse,
-  EstadisticasTemperatura,
+import { 
+  LecturaTemperatura, 
+  EstadisticasTemperatura, 
   EstadoSensor,
+  ApiResponse 
 } from '../models/temperatura.interface';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class TemperaturaService {
-  private readonly API_URL = 'http://localhost:3000/api';
+  private readonly baseUrl = 'http://localhost:3000/api';
 
   constructor(private http: HttpClient) {}
 
-  // Obtener lecturas de temperatura
-  obtenerLecturas(
-    limite: number = 20
-  ): Observable<ApiResponse<LecturaTemperatura[]>> {
-    return this.http.get<ApiResponse<LecturaTemperatura[]>>(
-      `${this.API_URL}/temperatura?limite=${limite}`
-    );
+  // Obtener todas las lecturas
+  obtenerLecturas(): Observable<ApiResponse<LecturaTemperatura[]>> {
+    return this.http.get<ApiResponse<LecturaTemperatura[]>>(`${this.baseUrl}/temperatura`);
+  }
+
+  // Crear nueva lectura
+  crearLectura(lectura: Omit<LecturaTemperatura, 'id'>): Observable<ApiResponse<LecturaTemperatura>> {
+    return this.http.post<ApiResponse<LecturaTemperatura>>(`${this.baseUrl}/temperatura`, lectura);
   }
 
   // Obtener estadísticas
   obtenerEstadisticas(): Observable<ApiResponse<EstadisticasTemperatura>> {
-    return this.http.get<ApiResponse<EstadisticasTemperatura>>(
-      `${this.API_URL}/temperatura/estadisticas`
-    );
+    return this.http.get<ApiResponse<EstadisticasTemperatura>>(`${this.baseUrl}/temperatura/estadisticas`);
   }
 
-  // Crear nueva lectura manual
-  crearLectura(valor: number): Observable<ApiResponse<LecturaTemperatura>> {
-    return this.http.post<ApiResponse<LecturaTemperatura>>(
-      `${this.API_URL}/temperatura`,
-      { valor }
-    );
-  }
-
-  // Limpiar todas las lecturas
-  limpiarLecturas(): Observable<ApiResponse<any>> {
-    return this.http.delete<ApiResponse<any>>(`${this.API_URL}/temperatura`);
-  }
-
-  // Iniciar sensor
+  // Control del sensor
   iniciarSensor(): Observable<ApiResponse<EstadoSensor>> {
-    return this.http.post<ApiResponse<EstadoSensor>>(
-      `${this.API_URL}/sensor/iniciar`,
-      {}
-    );
+    return this.http.post<ApiResponse<EstadoSensor>>(`${this.baseUrl}/sensor/iniciar`, {});
   }
 
-  // Detener sensor
   detenerSensor(): Observable<ApiResponse<EstadoSensor>> {
-    return this.http.post<ApiResponse<EstadoSensor>>(
-      `${this.API_URL}/sensor/detener`,
-      {}
-    );
+    return this.http.post<ApiResponse<EstadoSensor>>(`${this.baseUrl}/sensor/detener`, {});
   }
 
-  // Obtener estado del sensor
   obtenerEstadoSensor(): Observable<ApiResponse<EstadoSensor>> {
-    return this.http.get<ApiResponse<EstadoSensor>>(
-      `${this.API_URL}/sensor/estado`
-    );
+    return this.http.get<ApiResponse<EstadoSensor>>(`${this.baseUrl}/sensor/estado`);
+  }
+
+  // Limpiar datos
+  limpiarDatos(): Observable<ApiResponse<any>> {
+    return this.http.delete<ApiResponse<any>>(`${this.baseUrl}/temperatura`);
   }
 }
