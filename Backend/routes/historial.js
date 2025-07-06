@@ -17,6 +17,33 @@ const HistorialFacultad = mongoose.model(
   HistorialFacultadSchema
 );
 
+// Función auxiliar para crear registro de historial
+async function crearRegistroHistorial(datos) {
+  const {
+    facultad_id,
+    facultad_nombre,
+    temperatura,
+    fecha,
+    ubicacion,
+    sensor_id,
+  } = datos;
+
+  console.log('💾 Datos recibidos para historial:', datos);
+
+  const historial = new HistorialFacultad({
+    facultad_id: facultad_id || 'general',
+    facultad_nombre: facultad_nombre || ubicacion || 'General',
+    temperatura,
+    fecha: fecha || new Date(),
+    sensor_id: sensor_id || 'sensor_default',
+    ubicacion: ubicacion || 'Ubicación desconocida',
+  });
+
+  const saved = await historial.save();
+  console.log('✅ Historial guardado:', saved);
+  return saved;
+}
+
 // Función para obtener el ID de facultad basado en la ubicación
 function obtenerFacultadId(ubicacion) {
   const ubicacionLower = ubicacion.toLowerCase();
@@ -257,18 +284,33 @@ router.get('/resumen', async (req, res) => {
 router.get('/rango', async (req, res) => {
   try {
     const { inicio, fin, facultad } = req.query;
+    
+    console.log('🔍 Params historial/rango:', { inicio, fin, facultad });
 
     if (!inicio || !fin) {
+      console.log('❌ Faltan fechas de inicio y fin');
       return res.status(400).json({
         success: false,
         message: 'Se requieren fechas de inicio y fin',
       });
     }
 
+    // Ajustar las fechas para incluir todo el día
+    const fechaInicio = new Date(inicio);
+    fechaInicio.setHours(0, 0, 0, 0); // Inicio del día
+    
+    const fechaFin = new Date(fin);
+    fechaFin.setHours(23, 59, 59, 999); // Final del día
+    
+    console.log('📅 Fechas ajustadas:', { 
+      fechaInicio: fechaInicio.toISOString(), 
+      fechaFin: fechaFin.toISOString() 
+    });
+
     const filtro = {
       fecha: {
-        $gte: new Date(inicio),
-        $lte: new Date(fin),
+        $gte: fechaInicio,
+        $lte: fechaFin,
       },
     };
 
@@ -276,7 +318,22 @@ router.get('/rango', async (req, res) => {
       filtro.facultad_id = facultad;
     }
 
+    console.log('📋 Filtro aplicado:', filtro);
+    console.log('📊 Total documentos en HistorialFacultad:', await HistorialFacultad.countDocuments());
+
+    // Ver fechas de todos los documentos para debug
+    const todosDocs = await HistorialFacultad.find({}, { fecha: 1, facultad_nombre: 1 }).sort({ fecha: -1 }).limit(10);
+    console.log('📅 Fechas de documentos existentes:', todosDocs.map(d => ({ 
+      fecha: d.fecha, 
+      facultad: d.facultad_nombre 
+    })));
+
     const historial = await HistorialFacultad.find(filtro).sort({ fecha: -1 });
+    
+    console.log('📈 Documentos encontrados:', historial.length);
+    if (historial.length > 0) {
+      console.log('📝 Primer documento:', historial[0]);
+    }
 
     res.json({
       success: true,
@@ -284,6 +341,7 @@ router.get('/rango', async (req, res) => {
       message: 'Historial por rango de fechas obtenido correctamente',
     });
   } catch (error) {
+    console.error('❌ Error en /rango:', error);
     res.status(500).json({
       success: false,
       message: 'Error obteniendo historial por rango de fechas',

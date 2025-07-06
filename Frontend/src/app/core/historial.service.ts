@@ -79,6 +79,7 @@ export class HistorialService {
     if (facultadId) {
       url += `&facultad=${facultadId}`;
     }
+    console.log('🌐 Llamando a URL:', url);
     return this.http.get(url);
   }
 

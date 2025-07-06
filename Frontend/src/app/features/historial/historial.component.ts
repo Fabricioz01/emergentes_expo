@@ -73,22 +73,22 @@ Chart.register(...registerables);
       <div class="resumen-section" *ngIf="resumenGeneral">
         <div class="stat-card">
           <h3>🏛️ Total Facultades</h3>
-          <span class="stat-value">{{ resumenGeneral.total_facultades }}</span>
+          <span class="stat-value">{{ resumenGeneral?.total_facultades || 0 }}</span>
         </div>
         <div class="stat-card">
           <h3>📈 Promedio General</h3>
           <span class="stat-value"
-            >{{ resumenGeneral.promedio_general | number : '1.1-1' }}°C</span
+            >{{ (resumenGeneral?.promedio_general || 0) | number : '1.1-1' }}°C</span
           >
         </div>
         <div class="stat-card">
           <h3>🚨 Total Alertas</h3>
-          <span class="stat-value">{{ resumenGeneral.alertas_totales }}</span>
+          <span class="stat-value">{{ resumenGeneral?.alertas_totales || 0 }}</span>
         </div>
         <div class="stat-card">
           <h3>⏰ Última Actualización</h3>
           <span class="stat-value">{{
-            resumenGeneral.ultima_actualizacion | date : 'HH:mm:ss'
+            (resumenGeneral?.ultima_actualizacion || '---') | date : 'HH:mm:ss'
           }}</span>
         </div>
       </div>
@@ -96,7 +96,7 @@ Chart.register(...registerables);
       <!-- Estadísticas por Facultad -->
       <div
         class="estadisticas-section"
-        *ngIf="estadisticasFacultades.length > 0"
+        *ngIf="estadisticasFacultades && estadisticasFacultades.length > 0"
       >
         <h2>📋 Estadísticas por Facultad</h2>
         <div class="tabla-estadisticas">
@@ -134,7 +134,7 @@ Chart.register(...registerables);
       </div>
 
       <!-- Gráfico de Tendencias -->
-      <div class="grafico-section" *ngIf="historialData.length > 0">
+      <div class="grafico-section" *ngIf="historialData && historialData.length > 0">
         <h2>📈 Tendencias de Temperatura</h2>
         <div class="chart-container">
           <canvas #historialChart width="800" height="400"></canvas>
@@ -142,7 +142,7 @@ Chart.register(...registerables);
       </div>
 
       <!-- Tabla de Historial Detallado -->
-      <div class="historial-detalle" *ngIf="historialData.length > 0">
+      <div class="historial-detalle" *ngIf="historialData && historialData.length > 0">
         <h2>📄 Historial Detallado</h2>
         <div class="tabla-historial">
           <table>
@@ -187,7 +187,7 @@ Chart.register(...registerables);
       </div>
 
       <!-- Mensaje cuando no hay datos -->
-      <div class="no-data" *ngIf="!cargando && historialData.length === 0">
+      <div class="no-data" *ngIf="!cargando && (!historialData || historialData.length === 0)">
         <h3>📭 No hay datos disponibles</h3>
         <p>No se encontraron registros para los filtros seleccionados.</p>
       </div>
@@ -226,13 +226,13 @@ export class HistorialComponent implements OnInit, OnDestroy {
   ];
 
   constructor(private historialService: HistorialService) {
-    // Configurar fechas por defecto (última semana)
+    // Configurar fechas por defecto (último mes para mayor rango)
     const hoy = new Date();
-    const semanaAnterior = new Date(hoy);
-    semanaAnterior.setDate(hoy.getDate() - 7);
+    const unMesAnterior = new Date(hoy);
+    unMesAnterior.setMonth(hoy.getMonth() - 1);
 
     this.fechaFin = hoy.toISOString().split('T')[0];
-    this.fechaInicio = semanaAnterior.toISOString().split('T')[0];
+    this.fechaInicio = unMesAnterior.toISOString().split('T')[0];
   }
 
   ngOnInit(): void {
@@ -249,6 +249,28 @@ export class HistorialComponent implements OnInit, OnDestroy {
     this.cargarResumen();
     this.cargarEstadisticas();
     this.cargarHistorial();
+
+    // También cargar datos de todas las fechas para verificar si hay datos
+    this.cargarTodosLosDatos();
+  }
+
+  cargarTodosLosDatos(): void {
+    // Cargar todos los datos sin filtro de fecha para debug - usando endpoint general
+    this.historialService.obtenerHistorialGeneral().subscribe({
+      next: (response: any) => {
+        console.log('📊 Todos los datos del historial (general):', response);
+        if (response.success && response.data.length > 0) {
+          console.log(
+            `Se encontraron ${response.data.length} registros en total`
+          );
+        } else {
+          console.log('No se encontraron datos en el historial');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error cargando todos los datos:', error);
+      },
+    });
   }
 
   cargarResumen(): void {
@@ -279,8 +301,15 @@ export class HistorialComponent implements OnInit, OnDestroy {
 
   cargarHistorial(): void {
     this.cargando = true;
+    
+    console.log('🔍 Cargando historial con parámetros:', {
+      fechaInicio: this.fechaInicio,
+      fechaFin: this.fechaFin,
+      facultadSeleccionada: this.facultadSeleccionada
+    });
 
     if (this.fechaInicio && this.fechaFin) {
+      console.log('📅 Usando filtro por fechas');
       this.historialService
         .obtenerHistorialPorFechas(
           this.fechaInicio,
@@ -289,6 +318,7 @@ export class HistorialComponent implements OnInit, OnDestroy {
         )
         .subscribe({
           next: (response) => {
+            console.log('📊 Respuesta historial por fechas:', response);
             if (response.success) {
               this.historialData = response.data;
               this.actualizarGrafico();
@@ -296,7 +326,7 @@ export class HistorialComponent implements OnInit, OnDestroy {
             this.cargando = false;
           },
           error: (error) => {
-            console.error('Error cargando historial:', error);
+            console.error('❌ Error cargando historial:', error);
             this.cargando = false;
           },
         });
