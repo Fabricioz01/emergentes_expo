@@ -6,7 +6,7 @@ import {
   EstadisticasTemperatura,
   EstadoSensor,
   ApiResponse,
-} from '../models/temperatura.interface';
+} from './temperatura.interface';
 
 @Injectable({
   providedIn: 'root',

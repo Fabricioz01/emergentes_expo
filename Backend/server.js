@@ -6,6 +6,7 @@ const connectDB = require('./config/database');
 // Importar rutas
 const temperaturaRoutes = require('./routes/temperatura');
 const sensorRoutes = require('./routes/sensor');
+const { router: historialRoutes } = require('./routes/historial');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 // Rutas
 app.use('/api', temperaturaRoutes);
 app.use('/api', sensorRoutes);
+app.use('/api/historial', historialRoutes);
 
 // Ruta de bienvenida
 app.get('/', (req, res) => {

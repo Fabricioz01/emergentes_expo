@@ -1,10 +1,55 @@
-# 🌡️ Sistema IoT de Temperatura - Simulación Completa
+# � Sistema IoT ULEAM - Monitoreo de Temperatura
 
-Simulación de un sistema IoT completo sin hardware físico, desarrollado con **Angular** (frontend) y **Node.js + MongoDB** (backend).
+Sistema completo de monitoreo de temperatura para la Universidad Laica Eloy Alfaro de Manabí (ULEAM) con dashboard interactivo y historial por facultades.
 
-## 🎯 Objetivo
+## 🚀 Características Principales
 
-Simular un sensor de temperatura que envía datos periódicos a un backend, guarda los datos en MongoDB, y permite visualizarlos desde una aplicación web en tiempo real.
+### ✅ Funcionalidades Implementadas
+
+- **Dashboard Interactivo**: Estudiante virtual que se mueve entre facultades
+- **Monitoreo en Tiempo Real**: Actualización automática de temperaturas cada 5 segundos
+- **Historial por Facultad**: Sistema completo de registro histórico
+- **Alertas de Temperatura**: Notificaciones cuando excede 30°C
+- **Estructura Profesional**: Código organizado por carpetas y responsabilidades
+- **Base de Datos**: MongoDB con colecciones separadas para lecturas e historial
+
+### 🏛️ Facultades Incluidas
+
+1. **FTI** - Facultad de Tecnologías de la Información 💻
+2. **Medicina** - Facultad de Medicina 🏥
+3. **Turismo** - Facultad de Turismo ✈️
+4. **Educación** - Facultad de Educación 📚
+5. **Arquitectura** - Facultad de Arquitectura 🏗️
+6. **Idiomas** - Instituto de Idiomas 🗣️
+
+## 🚀 Ejecución Rápida
+
+### Inicio Automático (Recomendado)
+
+Ejecutar el archivo `iniciar-sistema.bat` que iniciará ambos servicios automáticamente.
+
+### Acceso a la Aplicación
+
+- **Frontend**: http://localhost:4200
+- **Backend API**: http://localhost:3000
+- **Dashboard**: Tab "Dashboard" en la aplicación
+- **Historial**: Tab "Historial" en la aplicación
+
+## 🎮 Uso del Sistema
+
+### Dashboard Principal
+
+1. **Iniciar Sistema**: Hacer clic en "Iniciar Monitoreo"
+2. **Seleccionar Facultad**: Hacer clic en cualquier facultad del mapa
+3. **Observar Medición**: El estudiante se moverá y tomará la medición
+4. **Ver Resultados**: Los datos aparecerán en tiempo real en el gráfico
+
+### Módulo de Historial
+
+1. **Acceder**: Hacer clic en el tab "Historial"
+2. **Filtrar**: Seleccionar facultad, fechas específicas
+3. **Analizar**: Ver estadísticas y tendencias
+4. **Exportar**: Descargar datos en JSON o CSV
 
 ## 🛠️ Arquitectura del Sistema
 

@@ -12,6 +12,14 @@ const lecturaTemperaturaSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  ubicacion: {
+    type: String,
+    default: 'Ubicación desconocida',
+  },
+  sensor_id: {
+    type: String,
+    default: 'sensor_default',
+  },
 });
 
 // Índice para optimizar consultas por fecha

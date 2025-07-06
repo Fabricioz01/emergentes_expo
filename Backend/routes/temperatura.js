@@ -1,5 +1,6 @@
 const express = require('express');
 const LecturaTemperatura = require('../models/LecturaTemperatura');
+const { crearRegistroHistorial } = require('./historial');
 const router = express.Router();
 
 // GET /api/temperatura - Obtener últimas lecturas
@@ -33,16 +34,16 @@ router.get('/temperatura', async (req, res) => {
 // POST /api/temperatura - Crear nueva lectura (para pruebas manuales)
 router.post('/temperatura', async (req, res) => {
   try {
-    const { valor } = req.body;
+    const { temperatura, ubicacion, sensor_id } = req.body;
 
-    if (!valor || typeof valor !== 'number') {
+    if (!temperatura || typeof temperatura !== 'number') {
       return res.status(400).json({
         success: false,
         message: 'El valor de temperatura es requerido y debe ser un número',
       });
     }
 
-    if (valor < -50 || valor > 100) {
+    if (temperatura < -50 || temperatura > 100) {
       return res.status(400).json({
         success: false,
         message: 'La temperatura debe estar entre -50°C y 100°C',
@@ -50,16 +51,37 @@ router.post('/temperatura', async (req, res) => {
     }
 
     const nuevaLectura = new LecturaTemperatura({
-      valor,
+      valor: temperatura,
       fecha: new Date(),
+      ubicacion: ubicacion || 'Ubicación desconocida',
+      sensor_id: sensor_id || 'sensor_default',
     });
 
     const lecturaGuardada = await nuevaLectura.save();
 
+    // Crear registro en historial
+    try {
+      await crearRegistroHistorial({
+        temperatura: temperatura,
+        fecha: lecturaGuardada.fecha,
+        ubicacion: ubicacion || 'Ubicación desconocida',
+        sensor_id: sensor_id || 'sensor_default',
+      });
+    } catch (historialError) {
+      console.warn('Error creando registro de historial:', historialError);
+      // No fallar la respuesta principal por error en historial
+    }
+
     res.status(201).json({
       success: true,
       message: 'Lectura de temperatura guardada exitosamente',
-      data: lecturaGuardada,
+      data: {
+        id: lecturaGuardada._id,
+        temperatura: lecturaGuardada.valor,
+        fecha: lecturaGuardada.fecha,
+        ubicacion: lecturaGuardada.ubicacion,
+        sensor_id: lecturaGuardada.sensor_id,
+      },
     });
   } catch (error) {
     console.error('Error guardando lectura:', error);

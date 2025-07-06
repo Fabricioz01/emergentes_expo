@@ -7,12 +7,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
-import { TemperaturaService } from '../services/temperatura.service';
+import { TemperaturaService } from '../../core/temperatura.service';
 import {
   LecturaTemperatura,
   EstadisticasTemperatura,
   EstadoSensor,
-} from '../models/temperatura.interface';
+} from '../../core/temperatura.interface';
 
 Chart.register(...registerables);
 
@@ -52,7 +52,7 @@ interface Facultad {
             <span *ngIf="!sistemaActivo">🚀 Iniciar Monitoreo</span>
             <span *ngIf="sistemaActivo">🔄 Sistema Activo</span>
           </button>
-          
+
           <button
             class="btn-university stop"
             (click)="detenerSistema()"
@@ -60,11 +60,8 @@ interface Facultad {
           >
             🛑 Detener
           </button>
-          
-          <button
-            class="btn-university reset"
-            (click)="resetearDatos()"
-          >
+
+          <button class="btn-university reset" (click)="resetearDatos()">
             🗑️ Limpiar Datos
           </button>
         </div>
@@ -74,18 +71,27 @@ interface Facultad {
       <div class="campus-map">
         <div class="map-title">
           <h3>📍 Campus Universidad Laica Eloy Alfaro de Manabí</h3>
-          <p *ngIf="!sistemaActivo" class="instruction">Haz clic en "Iniciar Monitoreo" y luego selecciona una facultad para que el estudiante tome mediciones</p>
-          <p *ngIf="sistemaActivo && !estudianteOcupado" class="instruction">Haz clic en cualquier facultad para que el estudiante se dirija allí</p>
-          <p *ngIf="estudianteOcupado" class="instruction">El estudiante está {{estadoEstudiante}}...</p>
+          <p *ngIf="!sistemaActivo" class="instruction">
+            Haz clic en "Iniciar Monitoreo" y luego selecciona una facultad para
+            que el estudiante tome mediciones
+          </p>
+          <p *ngIf="sistemaActivo && !estudianteOcupado" class="instruction">
+            Haz clic en cualquier facultad para que el estudiante se dirija allí
+          </p>
+          <p *ngIf="estudianteOcupado" class="instruction">
+            El estudiante está {{ estadoEstudiante }}...
+          </p>
         </div>
 
         <!-- Estudiante -->
-        <div class="estudiante" 
-             [style.left.px]="estudiantePosicion.x" 
-             [style.top.px]="estudiantePosicion.y"
-             [class.walking]="estudianteCaminando"
-             [class.measuring]="estudianteMidiendo"
-             [class.alert]="alertaActiva">
+        <div
+          class="estudiante"
+          [style.left.px]="estudiantePosicion.x"
+          [style.top.px]="estudiantePosicion.y"
+          [class.walking]="estudianteCaminando"
+          [class.measuring]="estudianteMidiendo"
+          [class.alert]="alertaActiva"
+        >
           <div class="estudiante-body">
             <div class="estudiante-head">👨‍🎓</div>
             <div class="estudiante-status">
@@ -95,64 +101,70 @@ interface Facultad {
               <span *ngIf="estadoEstudiante === 'alerta'">🚨</span>
             </div>
           </div>
-          
+
           <!-- Efectos de medición -->
           <div class="measurement-effect" *ngIf="estudianteMidiendo">
             <div class="measurement-line"></div>
             <div class="measurement-particles">
-              <span *ngFor="let i of [1,2,3,4,5]">📊</span>
+              <span *ngFor="let i of [1, 2, 3, 4, 5]">📊</span>
             </div>
           </div>
-          
+
           <!-- Alerta de temperatura -->
           <div class="alert-effect" *ngIf="alertaActiva">
             <div class="alert-ring"></div>
-            <div class="alert-text">🔥 {{ultimaTemperatura}}°C</div>
+            <div class="alert-text">🔥 {{ ultimaTemperatura }}°C</div>
           </div>
-          
+
           <!-- Rastro de movimiento -->
           <div class="movement-trail" *ngIf="estudianteCaminando">
-            <div class="trail-dot" *ngFor="let i of [1,2,3]"></div>
+            <div class="trail-dot" *ngFor="let i of [1, 2, 3]"></div>
           </div>
         </div>
 
         <!-- Facultades -->
-        <div *ngFor="let facultad of facultades" 
-             class="facultad"
-             [style.left.px]="facultad.posicion.x"
-             [style.top.px]="facultad.posicion.y"
-             [class.active]="facultadActual?.id === facultad.id"
-             [class.visited]="facultad.visitada"
-             [class.clickable]="sistemaActivo && !estudianteOcupado"
-             (click)="seleccionarFacultad(facultad)">
-          
+        <div
+          *ngFor="let facultad of facultades"
+          class="facultad"
+          [style.left.px]="facultad.posicion.x"
+          [style.top.px]="facultad.posicion.y"
+          [class.active]="facultadActual?.id === facultad.id"
+          [class.visited]="facultad.visitada"
+          [class.clickable]="sistemaActivo && !estudianteOcupado"
+          (click)="seleccionarFacultad(facultad)"
+        >
           <div class="facultad-icon" [style.background-color]="facultad.color">
-            {{facultad.emoji}}
+            {{ facultad.emoji }}
           </div>
-          
-          <div class="facultad-label">{{facultad.nombreCorto}}</div>
-          
-          <div class="facultad-status" *ngIf="facultadActual?.id === facultad.id">
+
+          <div class="facultad-label">{{ facultad.nombreCorto }}</div>
+
+          <div
+            class="facultad-status"
+            *ngIf="facultadActual?.id === facultad.id"
+          >
             <div class="measuring-indicator">
               <div class="pulse-ring"></div>
               Midiendo...
             </div>
           </div>
-          
+
           <!-- Última temperatura de la facultad -->
           <div class="facultad-temp" *ngIf="facultadesData[facultad.id]">
-            {{facultadesData[facultad.id]}}°C
+            {{ facultadesData[facultad.id] }}°C
           </div>
         </div>
 
         <!-- Partículas de fondo del campus -->
         <div class="campus-particles">
-          <div *ngFor="let particle of particulas" 
-               class="particle"
-               [style.left.px]="particle.x"
-               [style.top.px]="particle.y"
-               [style.animation-delay.s]="particle.delay">
-            {{particle.symbol}}
+          <div
+            *ngFor="let particle of particulas"
+            class="particle"
+            [style.left.px]="particle.x"
+            [style.top.px]="particle.y"
+            [style.animation-delay.s]="particle.delay"
+          >
+            {{ particle.symbol }}
           </div>
         </div>
       </div>
@@ -161,23 +173,33 @@ interface Facultad {
       <div class="student-status" *ngIf="sistemaActivo">
         <div class="status-info">
           <h3>👨‍🎓 Estado del Estudiante</h3>
-          <p>🎯 Objetivo: {{facultadActual?.nombre || facultadObjetivo?.nombre || 'Esperando selección...'}}</p>
-          <p>📊 Mediciones tomadas: {{totalMediciones}}</p>
-          <p>🏛️ Facultades visitadas: {{facultadesVisitadas.length}} / {{facultades.length}}</p>
+          <p>
+            🎯 Objetivo:
+            {{
+              facultadActual?.nombre ||
+                facultadObjetivo?.nombre ||
+                'Esperando selección...'
+            }}
+          </p>
+          <p>📊 Mediciones tomadas: {{ totalMediciones }}</p>
+          <p>
+            🏛️ Facultades visitadas: {{ facultadesVisitadas.length }} /
+            {{ facultades.length }}
+          </p>
         </div>
-        
+
         <div class="student-speech" *ngIf="mensajeEstudiante">
           <div class="speech-bubble">
-            {{mensajeEstudiante}}
+            {{ mensajeEstudiante }}
           </div>
         </div>
       </div>
 
       <!-- Alertas de temperatura -->
       <div class="temperature-alerts" *ngIf="alertasRecientes.length > 0">
-        <div *ngFor="let alerta of alertasRecientes" 
-             class="alert-notification">
-          🚨 <strong>Alerta:</strong> {{alerta.facultad}} registró {{alerta.temperatura}}°C
+        <div *ngFor="let alerta of alertasRecientes" class="alert-notification">
+          🚨 <strong>Alerta:</strong> {{ alerta.facultad }} registró
+          {{ alerta.temperatura }}°C
           <button (click)="cerrarAlerta(alerta)" class="close-alert">×</button>
         </div>
       </div>
@@ -187,31 +209,39 @@ interface Facultad {
         <div class="stat-card temperature" *ngIf="estadisticas">
           <div class="stat-icon">🌡️</div>
           <div class="stat-content">
-            <div class="stat-value">{{estadisticas.promedio | number:'1.1-1'}}°C</div>
+            <div class="stat-value">
+              {{ estadisticas.promedio | number : '1.1-1' }}°C
+            </div>
             <div class="stat-label">Promedio</div>
           </div>
         </div>
-        
+
         <div class="stat-card readings" *ngIf="estadisticas">
           <div class="stat-icon">📊</div>
           <div class="stat-content">
-            <div class="stat-value">{{estadisticas.total}}</div>
+            <div class="stat-value">{{ estadisticas.total }}</div>
             <div class="stat-label">Lecturas</div>
           </div>
         </div>
-        
-        <div class="stat-card alerts" *ngIf="estadisticas" [class.danger]="estadisticas.alertas > 0">
+
+        <div
+          class="stat-card alerts"
+          *ngIf="estadisticas"
+          [class.danger]="estadisticas.alertas > 0"
+        >
           <div class="stat-icon">🚨</div>
           <div class="stat-content">
-            <div class="stat-value">{{estadisticas.alertas}}</div>
+            <div class="stat-value">{{ estadisticas.alertas }}</div>
             <div class="stat-label">Alertas</div>
           </div>
         </div>
-        
+
         <div class="stat-card faculties">
           <div class="stat-icon">🏛️</div>
           <div class="stat-content">
-            <div class="stat-value">{{facultadesVisitadas.length}}/{{facultades.length}}</div>
+            <div class="stat-value">
+              {{ facultadesVisitadas.length }}/{{ facultades.length }}
+            </div>
             <div class="stat-label">Exploradas</div>
           </div>
         </div>
@@ -222,24 +252,31 @@ interface Facultad {
         <div class="chart-header">
           <h3>📈 Monitoreo en Tiempo Real - ULEAM</h3>
           <div class="chart-info">
-            <span class="connection-status" [class.connected]="!error" [class.disconnected]="error">
+            <span
+              class="connection-status"
+              [class.connected]="!error"
+              [class.disconnected]="error"
+            >
               <span class="status-dot"></span>
-              {{error ? 'Desconectado del servidor' : 'Conectado al sistema'}}
+              {{ error ? 'Desconectado del servidor' : 'Conectado al sistema' }}
             </span>
           </div>
         </div>
-        
+
         <div class="chart-container">
           <canvas #temperaturaChart></canvas>
         </div>
-        
+
         <!-- Leyenda de facultades -->
         <div class="chart-legend">
           <div class="legend-item" *ngFor="let facultad of facultades">
-            <span class="legend-color" [style.background-color]="facultad.color"></span>
-            <span>{{facultad.nombreCorto}}</span>
+            <span
+              class="legend-color"
+              [style.background-color]="facultad.color"
+            ></span>
+            <span>{{ facultad.nombreCorto }}</span>
             <span class="legend-value" *ngIf="facultadesData[facultad.id]">
-              {{facultadesData[facultad.id]}}°C
+              {{ facultadesData[facultad.id] }}°C
             </span>
           </div>
         </div>
@@ -252,15 +289,19 @@ interface Facultad {
           <span>|</span>
           <span>Sistema IoT de Monitoreo</span>
           <span>|</span>
-          <span>Última actualización: {{ultimaActualizacion | date:'HH:mm:ss'}}</span>
+          <span
+            >Última actualización:
+            {{ ultimaActualizacion | date : 'HH:mm:ss' }}</span
+          >
         </div>
       </footer>
     </div>
   `,
-  styleUrls: ['./dashboard.component.css']
+  styleUrls: ['./dashboard-uleam.component.css'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  @ViewChild('temperaturaChart', { static: true }) chartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('temperaturaChart', { static: true })
+  chartRef!: ElementRef<HTMLCanvasElement>;
 
   // Datos del sistema
   lecturas: LecturaTemperatura[] = [];
@@ -275,14 +316,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Propiedades del sistema universitario
   sistemaActivo = false;
   estudiantePosicion = { x: 50, y: 300 };
-  estadoEstudiante: 'esperando' | 'caminando' | 'midiendo' | 'alerta' = 'esperando';
+  estadoEstudiante: 'esperando' | 'caminando' | 'midiendo' | 'alerta' =
+    'esperando';
   estudianteOcupado = false;
   estudianteCaminando = false;
   estudianteMidiendo = false;
   alertaActiva = false;
   ultimaTemperatura = 0;
   totalMediciones = 0;
-  
+
   facultades: Facultad[] = [
     {
       id: 'fti',
@@ -293,7 +335,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       color: '#3B82F6',
       posicion: { x: 150, y: 120 },
       tempRange: { min: 20, max: 26 },
-      visitada: false
+      visitada: false,
     },
     {
       id: 'medicina',
@@ -304,7 +346,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       color: '#EF4444',
       posicion: { x: 450, y: 160 },
       tempRange: { min: 22, max: 25 },
-      visitada: false
+      visitada: false,
     },
     {
       id: 'turismo',
@@ -315,7 +357,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       color: '#10B981',
       posicion: { x: 750, y: 140 },
       tempRange: { min: 19, max: 28 },
-      visitada: false
+      visitada: false,
     },
     {
       id: 'educacion',
@@ -326,7 +368,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       color: '#F59E0B',
       posicion: { x: 250, y: 320 },
       tempRange: { min: 21, max: 27 },
-      visitada: false
+      visitada: false,
     },
     {
       id: 'arquitectura',
@@ -337,7 +379,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       color: '#8B5CF6',
       posicion: { x: 550, y: 350 },
       tempRange: { min: 23, max: 30 },
-      visitada: false
+      visitada: false,
     },
     {
       id: 'idiomas',
@@ -348,15 +390,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       color: '#EC4899',
       posicion: { x: 650, y: 180 },
       tempRange: { min: 20, max: 25 },
-      visitada: false
-    }
+      visitada: false,
+    },
   ];
 
   facultadActual: Facultad | null = null;
   facultadObjetivo: Facultad | null = null;
   facultadesVisitadas: string[] = [];
   facultadesData: { [key: string]: number } = {};
-  
+
   mensajeEstudiante = '';
   alertasRecientes: any[] = [];
   particulas: any[] = [];
@@ -381,11 +423,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Métodos del sistema universitario
   iniciarSistema(): void {
     if (this.sistemaActivo) return;
-    
+
     this.sistemaActivo = true;
     this.estadoEstudiante = 'esperando';
-    this.mostrarMensajeEstudiante('🎓 Sistema iniciado. Selecciona una facultad para comenzar las mediciones.');
-    
+    this.mostrarMensajeEstudiante(
+      '🎓 Sistema iniciado. Selecciona una facultad para comenzar las mediciones.'
+    );
+
     // Iniciar el sensor del backend
     this.temperaturaService.iniciarSensor().subscribe({
       next: (response) => {
@@ -397,7 +441,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         console.error('Error iniciando sensor:', error);
         this.sistemaActivo = false;
         this.error = 'Error al conectar con el servidor';
-      }
+      },
     });
   }
 
@@ -410,16 +454,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.alertaActiva = false;
     this.facultadActual = null;
     this.facultadObjetivo = null;
-    
-    this.mostrarMensajeEstudiante('😴 Sistema detenido. El estudiante está en reposo.');
-    
+
+    this.mostrarMensajeEstudiante(
+      '😴 Sistema detenido. El estudiante está en reposo.'
+    );
+
     // Detener el sensor del backend
     this.temperaturaService.detenerSensor().subscribe();
   }
 
   seleccionarFacultad(facultad: Facultad): void {
     if (!this.sistemaActivo || this.estudianteOcupado) return;
-    
+
     this.facultadObjetivo = facultad;
     this.mostrarMensajeEstudiante(`🎯 Dirigiéndome a ${facultad.nombre}`);
     this.moverEstudianteA(facultad);
@@ -429,24 +475,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.estudianteOcupado = true;
     this.estudianteCaminando = true;
     this.estadoEstudiante = 'caminando';
-    
+
     const duracion = 2000; // 2 segundos
     const startTime = Date.now();
     const startPos = { ...this.estudiantePosicion };
     const targetPos = { ...facultad.posicion };
-    
+
     const animacion = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duracion, 1);
-      
+
       // Interpolación suave
       const easeProgress = this.easeInOutQuad(progress);
-      
+
       this.estudiantePosicion = {
         x: startPos.x + (targetPos.x - startPos.x) * easeProgress,
-        y: startPos.y + (targetPos.y - startPos.y) * easeProgress
+        y: startPos.y + (targetPos.y - startPos.y) * easeProgress,
       };
-      
+
       if (progress < 1 && this.sistemaActivo) {
         requestAnimationFrame(animacion);
       } else {
@@ -455,17 +501,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.tomarMedicion();
       }
     };
-    
+
     requestAnimationFrame(animacion);
   }
 
   tomarMedicion(): void {
     if (!this.facultadActual || !this.sistemaActivo) return;
-    
+
     this.estudianteMidiendo = true;
     this.estadoEstudiante = 'midiendo';
-    this.mostrarMensajeEstudiante(`🌡️ Tomando medición en ${this.facultadActual.nombre}...`);
-    
+    this.mostrarMensajeEstudiante(
+      `🌡️ Tomando medición en ${this.facultadActual.nombre}...`
+    );
+
     setTimeout(() => {
       this.simularLectura();
     }, 2000);
@@ -473,30 +521,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   simularLectura(): void {
     if (!this.facultadActual) return;
-    
+
     const facultad = this.facultadActual;
     const tempMin = facultad.tempRange.min;
     const tempMax = facultad.tempRange.max;
-    const temperatura = Math.round((Math.random() * (tempMax - tempMin) + tempMin) * 10) / 10;
-    
+    const temperatura =
+      Math.round((Math.random() * (tempMax - tempMin) + tempMin) * 10) / 10;
+
     this.ultimaTemperatura = temperatura;
     this.facultadesData[facultad.id] = temperatura;
     this.totalMediciones++;
-    
+
     // Marcar facultad como visitada
     if (!facultad.visitada) {
       facultad.visitada = true;
       this.facultadesVisitadas.push(facultad.id);
     }
-    
+
     // Crear lectura para enviar al backend
     const lectura: Omit<LecturaTemperatura, 'id'> = {
       temperatura: temperatura,
       fecha: new Date(),
       ubicacion: facultad.nombre,
-      sensor_id: 'estudiante_uleam_001'
+      sensor_id: 'estudiante_uleam_001',
     };
-    
+
     // Enviar al backend
     this.temperaturaService.crearLectura(lectura).subscribe({
       next: (response) => {
@@ -508,40 +557,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error guardando lectura:', error);
-      }
+      },
     });
-    
+
     // Verificar alerta
     if (temperatura > 30) {
       this.activarAlerta();
     }
-    
+
     this.estudianteMidiendo = false;
     this.estadoEstudiante = 'esperando';
     this.estudianteOcupado = false;
     this.facultadActual = null;
     this.facultadObjetivo = null;
-    
-    this.mostrarMensajeEstudiante(`✅ Medición completada: ${temperatura}°C en ${facultad.nombreCorto}`);
+
+    this.mostrarMensajeEstudiante(
+      `✅ Medición completada: ${temperatura}°C en ${facultad.nombreCorto}`
+    );
   }
 
   activarAlerta(): void {
     this.alertaActiva = true;
     this.estadoEstudiante = 'alerta';
-    
+
     const alerta = {
       id: Date.now(),
       facultad: this.facultadActual?.nombreCorto,
       temperatura: this.ultimaTemperatura,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    
+
     this.alertasRecientes.unshift(alerta);
-    
+
     if (this.alertasRecientes.length > 5) {
       this.alertasRecientes = this.alertasRecientes.slice(0, 5);
     }
-    
+
     setTimeout(() => {
       this.alertaActiva = false;
       this.estadoEstudiante = 'esperando';
@@ -549,7 +600,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   cerrarAlerta(alerta: any): void {
-    this.alertasRecientes = this.alertasRecientes.filter(a => a.id !== alerta.id);
+    this.alertasRecientes = this.alertasRecientes.filter(
+      (a) => a.id !== alerta.id
+    );
   }
 
   mostrarMensajeEstudiante(mensaje: string): void {
@@ -571,10 +624,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.alertasRecientes = [];
             this.facultadesVisitadas = [];
             this.totalMediciones = 0;
-            
+
             // Resetear estado de facultades
-            this.facultades.forEach(f => f.visitada = false);
-            
+            this.facultades.forEach((f) => (f.visitada = false));
+
             this.actualizarChart();
             this.mostrarMensajeEstudiante('🗑️ Datos eliminados correctamente');
           }
@@ -585,7 +638,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
         complete: () => {
           this.cargando = false;
-        }
+        },
       });
     }
   }
@@ -602,7 +655,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         x: Math.random() * 800,
         y: Math.random() * 400,
         symbol: ['🌿', '🌸', '🦋', '☀️', '🌤️'][Math.floor(Math.random() * 5)],
-        delay: Math.random() * 3
+        delay: Math.random() * 3,
       });
     }
   }
@@ -617,16 +670,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private cargarLecturas(): void {
     this.temperaturaService.obtenerLecturas().subscribe({
       next: (response) => {
-        if (response.success) {
+        if (response.success && response.data) {
           this.lecturas = response.data;
           this.ultimaActualizacion = new Date();
           this.actualizarChart();
           this.error = null;
+
+          // Actualizar las temperaturas mostradas en las facultades
+          this.actualizarTemperaturasFacultades();
         }
       },
       error: (error) => {
         console.error('Error cargando lecturas:', error);
         this.error = 'Error de conexión';
+      },
+    });
+  }
+
+  private actualizarTemperaturasFacultades(): void {
+    // Actualizar las temperaturas mostradas para cada facultad con los últimos datos
+    this.facultades.forEach((facultad) => {
+      const lecturasFactultad = this.lecturas.filter((l) => {
+        const ubicacion = l.ubicacion || '';
+        return (
+          ubicacion.toLowerCase().includes(facultad.nombre.toLowerCase()) ||
+          ubicacion.toLowerCase().includes(facultad.nombreCorto.toLowerCase())
+        );
+      });
+
+      if (lecturasFactultad.length > 0) {
+        // Tomar la lectura más reciente
+        const lecturaReciente = lecturasFactultad[0];
+        const temperatura = lecturaReciente.temperatura || 0;
+        this.facultadesData[facultad.id] = temperatura;
       }
     });
   }
@@ -640,7 +716,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error cargando estadísticas:', error);
-      }
+      },
     });
   }
 
@@ -653,7 +729,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error cargando estado del sensor:', error);
-      }
+      },
     });
   }
 
@@ -679,33 +755,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
       type: 'line',
       data: {
         labels: [],
-        datasets: [{
-          label: 'Temperatura (°C)',
-          data: [],
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 6,
-          pointHoverRadius: 8
-        }]
+        datasets: [
+          {
+            label: 'Temperatura (°C)',
+            data: [],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         animation: {
           duration: 1000,
-          easing: 'easeInOutQuart'
+          easing: 'easeInOutQuart',
         },
         plugins: {
           legend: {
-            display: false
+            display: false,
           },
           title: {
             display: true,
-            text: '🌡️ Temperaturas en Tiempo Real - ULEAM'
-          }
+            text: '🌡️ Temperaturas en Tiempo Real - ULEAM',
+          },
         },
         scales: {
           y: {
@@ -714,17 +792,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
             max: 35,
             title: {
               display: true,
-              text: 'Temperatura (°C)'
-            }
+              text: 'Temperatura (°C)',
+            },
           },
           x: {
             title: {
               display: true,
-              text: 'Tiempo'
-            }
-          }
-        }
-      }
+              text: 'Tiempo',
+            },
+          },
+        },
+      },
     });
   }
 
@@ -732,17 +810,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.chart) return;
 
     const ultimasLecturas = this.lecturas.slice(0, 20).reverse();
-    const labels = ultimasLecturas.map(l => 
-      new Date(l.fecha).toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
+    const labels = ultimasLecturas.map((l) =>
+      new Date(l.fecha).toLocaleTimeString('es-ES', {
+        hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        second: '2-digit',
       })
     );
-    const data = ultimasLecturas.map(l => l.temperatura);
+    const data = ultimasLecturas.map((l) => l.temperatura || 0);
 
     this.chart.data.labels = labels;
     this.chart.data.datasets[0].data = data;
     this.chart.update('active');
+
+    // Actualizar también las temperaturas mostradas en las facultades
+    this.actualizarTemperaturasFacultades();
   }
 }
