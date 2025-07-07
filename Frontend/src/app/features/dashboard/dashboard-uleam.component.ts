@@ -303,7 +303,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('temperaturaChart', { static: true })
   chartRef!: ElementRef<HTMLCanvasElement>;
 
-  // Datos del sistema
   lecturas: LecturaTemperatura[] = [];
   estadisticas: EstadisticasTemperatura | null = null;
   estadoSensor: EstadoSensor | null = null;
@@ -313,7 +312,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   cargando = false;
   error: string | null = null;
 
-  // Propiedades del sistema universitario
   sistemaActivo = false;
   estudiantePosicion = { x: 50, y: 300 };
   estadoEstudiante: 'esperando' | 'caminando' | 'midiendo' | 'alerta' =
@@ -420,7 +418,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Métodos del sistema universitario
   iniciarSistema(): void {
     if (this.sistemaActivo) return;
 
@@ -430,7 +427,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       '🎓 Sistema iniciado. Selecciona una facultad para comenzar las mediciones.'
     );
 
-    // Iniciar el sensor del backend
     this.temperaturaService.iniciarSensor().subscribe({
       next: (response) => {
         if (response.success) {
@@ -438,7 +434,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error iniciando sensor:', error);
         this.sistemaActivo = false;
         this.error = 'Error al conectar con el servidor';
       },
@@ -459,7 +454,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       '😴 Sistema detenido. El estudiante está en reposo.'
     );
 
-    // Detener el sensor del backend
     this.temperaturaService.detenerSensor().subscribe();
   }
 
@@ -476,7 +470,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.estudianteCaminando = true;
     this.estadoEstudiante = 'caminando';
 
-    const duracion = 2000; // 2 segundos
+    const duracion = 2000;
     const startTime = Date.now();
     const startPos = { ...this.estudiantePosicion };
     const targetPos = { ...facultad.posicion };
@@ -485,7 +479,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duracion, 1);
 
-      // Interpolación suave
       const easeProgress = this.easeInOutQuad(progress);
 
       this.estudiantePosicion = {
@@ -532,13 +525,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.facultadesData[facultad.id] = temperatura;
     this.totalMediciones++;
 
-    // Marcar facultad como visitada
     if (!facultad.visitada) {
       facultad.visitada = true;
       this.facultadesVisitadas.push(facultad.id);
     }
 
-    // Crear lectura para enviar al backend
     const lectura: Omit<LecturaTemperatura, 'id'> = {
       temperatura: temperatura,
       fecha: new Date(),
@@ -546,7 +537,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       sensor_id: 'estudiante_uleam_001',
     };
 
-    // Enviar al backend
     this.temperaturaService.crearLectura(lectura).subscribe({
       next: (response) => {
         if (response.success) {
@@ -555,12 +545,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.cargarEstadisticas();
         }
       },
-      error: (error) => {
-        console.error('Error guardando lectura:', error);
-      },
+      error: (error) => {},
     });
 
-    // Verificar alerta
     if (temperatura > 30) {
       this.activarAlerta();
     }
@@ -625,7 +612,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.facultadesVisitadas = [];
             this.totalMediciones = 0;
 
-            // Resetear estado de facultades
             this.facultades.forEach((f) => (f.visitada = false));
 
             this.actualizarChart();
@@ -633,7 +619,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error eliminando datos:', error);
           this.error = 'Error al eliminar los datos';
         },
         complete: () => {
@@ -643,7 +628,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Métodos de utilidad
   private easeInOutQuad(t: number): number {
     return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
   }
@@ -660,7 +644,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Métodos de datos y gráficas
   private cargarDatosIniciales(): void {
     this.cargarLecturas();
     this.cargarEstadisticas();
@@ -676,19 +659,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.actualizarChart();
           this.error = null;
 
-          // Actualizar las temperaturas mostradas en las facultades
           this.actualizarTemperaturasFacultades();
         }
       },
       error: (error) => {
-        console.error('Error cargando lecturas:', error);
         this.error = 'Error de conexión';
       },
     });
   }
 
   private actualizarTemperaturasFacultades(): void {
-    // Actualizar las temperaturas mostradas para cada facultad con los últimos datos
+
     this.facultades.forEach((facultad) => {
       const lecturasFactultad = this.lecturas.filter((l) => {
         const ubicacion = l.ubicacion || '';
@@ -699,7 +680,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
 
       if (lecturasFactultad.length > 0) {
-        // Tomar la lectura más reciente
         const lecturaReciente = lecturasFactultad[0];
         const temperatura = lecturaReciente.temperatura || 0;
         this.facultadesData[facultad.id] = temperatura;
@@ -714,9 +694,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.estadisticas = response.data;
         }
       },
-      error: (error) => {
-        console.error('Error cargando estadísticas:', error);
-      },
+      error: (error) => {},
     });
   }
 
@@ -727,9 +705,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.estadoSensor = response.data;
         }
       },
-      error: (error) => {
-        console.error('Error cargando estado del sensor:', error);
-      },
+      error: (error) => {},
     });
   }
 
@@ -823,7 +799,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.chart.data.datasets[0].data = data;
     this.chart.update('active');
 
-    // Actualizar también las temperaturas mostradas en las facultades
     this.actualizarTemperaturasFacultades();
   }
 }

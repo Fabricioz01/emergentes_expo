@@ -243,7 +243,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   constructor(private historialService: HistorialService) {
-    // Configurar fechas por defecto (último mes para mayor rango)
     const hoy = new Date();
     const unMesAnterior = new Date(hoy);
     unMesAnterior.setMonth(hoy.getMonth() - 1);
@@ -256,9 +255,7 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarDatos();
   }
 
-  ngAfterViewInit(): void {
-    // El gráfico se actualizará cuando se carguen los datos
-  }
+  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
     if (this.chart) {
@@ -271,21 +268,14 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarEstadisticas();
     this.cargarHistorial();
 
-    // También cargar datos de todas las fechas para verificar si hay datos
     this.cargarTodosLosDatos();
   }
 
   cargarTodosLosDatos(): void {
-    // Cargar todos los datos sin filtro de fecha para debug - usando endpoint general
     this.historialService.obtenerHistorialGeneral().subscribe({
       next: (response: any) => {
-        console.log('📊 Todos los datos del historial (general):', response);
         if (response.success && response.data.length > 0) {
-          console.log(
-            `Se encontraron ${response.data.length} registros en total`
-          );
         } else {
-          console.log('No se encontraron datos en el historial');
         }
       },
       error: (error: any) => {
@@ -323,14 +313,7 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
   cargarHistorial(): void {
     this.cargando = true;
 
-    console.log('🔍 Cargando historial con parámetros:', {
-      fechaInicio: this.fechaInicio,
-      fechaFin: this.fechaFin,
-      facultadSeleccionada: this.facultadSeleccionada,
-    });
-
     if (this.fechaInicio && this.fechaFin) {
-      console.log('📅 Usando filtro por fechas');
       this.historialService
         .obtenerHistorialPorFechas(
           this.fechaInicio,
@@ -339,7 +322,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
         )
         .subscribe({
           next: (response) => {
-            console.log('📊 Respuesta historial por fechas:', response);
             if (response.success) {
               this.historialData = response.data;
               this.actualizarGrafico();
@@ -403,14 +385,12 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   exportarDatos(): void {
-    // Generar PDF directamente con los datos actuales
     this.generarPDF();
   }
 
   private generarPDF(): void {
     const doc = new jsPDF();
 
-    // Configurar fuente
     doc.setFont('helvetica');
 
     const fechaActual = new Date().toLocaleDateString('es-ES', {
@@ -428,14 +408,13 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
 
     let yPosition = 20;
 
-    // HEADER
     doc.setFontSize(18);
-    doc.setTextColor(59, 130, 246); // Azul
+    doc.setTextColor(59, 130, 246);
     doc.text('REPORTE DE TEMPERATURAS IOT', 20, yPosition);
     yPosition += 8;
 
     doc.setFontSize(14);
-    doc.setTextColor(16, 185, 129); // Verde
+    doc.setTextColor(16, 185, 129);
     doc.text('Universidad Laica Eloy Alfaro de Manabi (ULEAM)', 20, yPosition);
     yPosition += 6;
 
@@ -444,12 +423,10 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
     doc.text('Sistema de Monitoreo Ambiental por Facultades', 20, yPosition);
     yPosition += 15;
 
-    // LÍNEA SEPARADORA
     doc.setDrawColor(59, 130, 246);
     doc.line(20, yPosition, 190, yPosition);
     yPosition += 10;
 
-    // INFORMACIÓN DEL REPORTE
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
     doc.text('Fecha de Generacion: ' + fechaActual, 20, yPosition);
@@ -457,7 +434,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
     doc.text('Alcance del Reporte: ' + facultadTexto, 20, yPosition);
     yPosition += 15;
 
-    // RESUMEN EJECUTIVO
     if (this.resumenGeneral) {
       doc.setFontSize(14);
       doc.setTextColor(59, 130, 246);
@@ -494,14 +470,12 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
       yPosition += 15;
     }
 
-    // ESTADÍSTICAS POR FACULTAD
     if (this.estadisticasFacultades && this.estadisticasFacultades.length > 0) {
       doc.setFontSize(14);
       doc.setTextColor(59, 130, 246);
       doc.text('ESTADISTICAS POR FACULTAD', 20, yPosition);
       yPosition += 10;
 
-      // Headers de la tabla
       doc.setFontSize(8);
       doc.setTextColor(255, 255, 255);
       doc.setFillColor(59, 130, 246);
@@ -514,16 +488,13 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
       doc.text('Alertas', 170, yPosition);
       yPosition += 6;
 
-      // Datos de la tabla
       doc.setTextColor(0, 0, 0);
       this.estadisticasFacultades.forEach((stat, index) => {
         if (yPosition > 270) {
-          // Nueva página si es necesario
           doc.addPage();
           yPosition = 20;
         }
 
-        // Alternar color de fondo
         if (index % 2 === 0) {
           doc.setFillColor(248, 250, 252);
           doc.rect(20, yPosition - 3, 170, 5, 'F');
@@ -540,7 +511,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
         doc.text(stat.temperatura_maxima.toFixed(1) + 'C', 125, yPosition);
         doc.text(stat.total_mediciones.toString(), 140, yPosition);
 
-        // Alertas en rojo si hay
         if (stat.alertas_generadas > 0) {
           doc.setTextColor(239, 68, 68);
           doc.text(stat.alertas_generadas.toString(), 170, yPosition);
@@ -555,10 +525,8 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
       yPosition += 10;
     }
 
-    // HISTORIAL DETALLADO
     if (this.historialData && this.historialData.length > 0) {
       if (yPosition > 250) {
-        // Nueva página si es necesario
         doc.addPage();
         yPosition = 20;
       }
@@ -568,7 +536,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
       doc.text('HISTORIAL DETALLADO DE MEDICIONES', 20, yPosition);
       yPosition += 10;
 
-      // Headers de la tabla
       doc.setFontSize(8);
       doc.setTextColor(255, 255, 255);
       doc.setFillColor(59, 130, 246);
@@ -580,17 +547,14 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
       doc.text('Estado', 160, yPosition);
       yPosition += 6;
 
-      // Datos de la tabla (máximo 20 registros)
       doc.setTextColor(0, 0, 0);
       const datosParaPDF = this.historialData.slice(0, 20);
 
       datosParaPDF.forEach((registro, index) => {
         if (yPosition > 270) {
-          // Nueva página si es necesario
           doc.addPage();
           yPosition = 20;
 
-          // Repetir headers en nueva página
           doc.setFontSize(8);
           doc.setTextColor(255, 255, 255);
           doc.setFillColor(59, 130, 246);
@@ -603,7 +567,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
           yPosition += 6;
         }
 
-        // Alternar color de fondo
         if (index % 2 === 0) {
           doc.setFillColor(248, 250, 252);
           doc.rect(20, yPosition - 3, 170, 5, 'F');
@@ -630,7 +593,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
         doc.text(fechaFormateada, 22, yPosition);
         doc.text(facultadNombre, 60, yPosition);
 
-        // Temperatura en rojo si es alerta
         if (esAlerta) {
           doc.setTextColor(239, 68, 68);
           doc.text(registro.temperatura + 'C', 110, yPosition);
@@ -641,7 +603,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
 
         doc.text(registro.sensor_id, 130, yPosition);
 
-        // Estado
         if (esAlerta) {
           doc.setTextColor(239, 68, 68);
           doc.text('ALERTA', 160, yPosition);
@@ -669,16 +630,13 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     }
 
-    // FOOTER EN TODAS LAS PÁGINAS
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
 
-      // Línea separadora del footer
       doc.setDrawColor(226, 232, 240);
       doc.line(20, 280, 190, 280);
 
-      // Footer
       doc.setFontSize(8);
       doc.setTextColor(100, 116, 139);
       doc.text('Sistema de Monitoreo IoT - ULEAM', 20, 285);
@@ -689,11 +647,9 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
         295
       );
 
-      // Número de página
       doc.text('Pagina ' + i + ' de ' + pageCount, 170, 295);
     }
 
-    // Generar nombre del archivo
     const nombreArchivo = `Reporte_Temperaturas_ULEAM_${new Date().getFullYear()}_${(
       new Date().getMonth() + 1
     )
@@ -703,38 +659,24 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
       .toString()
       .padStart(2, '0')}.pdf`;
 
-    // Descargar el PDF
     doc.save(nombreArchivo);
-
-    console.log('✅ PDF descargado exitosamente:', nombreArchivo);
   }
 
   private actualizarGrafico(): void {
     if (!this.historialData || this.historialData.length === 0) {
-      console.log('No hay datos para el gráfico');
       return;
     }
 
-    // Verificar que el ViewChild esté disponible
     if (!this.historialChartRef) {
-      console.log('Canvas del gráfico aún no está disponible');
       setTimeout(() => this.actualizarGrafico(), 100);
       return;
     }
 
-    console.log(
-      'Actualizando gráfico con',
-      this.historialData.length,
-      'registros'
-    );
-
-    // Destruir gráfico anterior si existe
     if (this.chart) {
       this.chart.destroy();
     }
 
-    // Preparar datos para el gráfico
-    const datos = this.historialData.slice(0, 20).reverse(); // Últimos 20 registros
+    const datos = this.historialData.slice(0, 20).reverse();
     const labels = datos.map((d) =>
       new Date(d.fecha).toLocaleString('es', {
         day: '2-digit',
@@ -745,7 +687,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
     );
     const facultades = datos.map((d) => d.facultad_nombre);
 
-    // Crear datasets por facultad
     const facultadesUnicas = [...new Set(facultades)];
     const colores = [
       '#667eea',
@@ -776,7 +717,6 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
       };
     });
 
-    // Crear gráfico usando ViewChild
     const canvas = this.historialChartRef.nativeElement;
 
     this.chart = new Chart(canvas, {
@@ -828,7 +768,5 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
         },
       },
     });
-
-    console.log('✅ Gráfico actualizado exitosamente');
   }
 }
