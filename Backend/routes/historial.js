@@ -284,7 +284,7 @@ router.get('/resumen', async (req, res) => {
 router.get('/rango', async (req, res) => {
   try {
     const { inicio, fin, facultad } = req.query;
-    
+
     console.log('🔍 Params historial/rango:', { inicio, fin, facultad });
 
     if (!inicio || !fin) {
@@ -298,10 +298,10 @@ router.get('/rango', async (req, res) => {
     // Ajustar las fechas para incluir todo el día usando UTC
     const fechaInicio = new Date(inicio + 'T00:00:00.000Z');
     const fechaFin = new Date(fin + 'T23:59:59.999Z');
-    
-    console.log('📅 Fechas ajustadas:', { 
-      fechaInicio: fechaInicio.toISOString(), 
-      fechaFin: fechaFin.toISOString() 
+
+    console.log('📅 Fechas ajustadas:', {
+      fechaInicio: fechaInicio.toISOString(),
+      fechaFin: fechaFin.toISOString(),
     });
 
     const filtro = {
@@ -316,17 +316,28 @@ router.get('/rango', async (req, res) => {
     }
 
     console.log('📋 Filtro aplicado:', filtro);
-    console.log('📊 Total documentos en HistorialFacultad:', await HistorialFacultad.countDocuments());
+    console.log(
+      '📊 Total documentos en HistorialFacultad:',
+      await HistorialFacultad.countDocuments()
+    );
 
     // Ver fechas de todos los documentos para debug
-    const todosDocs = await HistorialFacultad.find({}, { fecha: 1, facultad_nombre: 1 }).sort({ fecha: -1 }).limit(10);
-    console.log('📅 Fechas de documentos existentes:', todosDocs.map(d => ({ 
-      fecha: d.fecha, 
-      facultad: d.facultad_nombre 
-    })));
+    const todosDocs = await HistorialFacultad.find(
+      {},
+      { fecha: 1, facultad_nombre: 1 }
+    )
+      .sort({ fecha: -1 })
+      .limit(10);
+    console.log(
+      '📅 Fechas de documentos existentes:',
+      todosDocs.map((d) => ({
+        fecha: d.fecha,
+        facultad: d.facultad_nombre,
+      }))
+    );
 
     const historial = await HistorialFacultad.find(filtro).sort({ fecha: -1 });
-    
+
     console.log('📈 Documentos encontrados:', historial.length);
     if (historial.length > 0) {
       console.log('📝 Primer documento:', historial[0]);

@@ -1,4 +1,11 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
@@ -74,22 +81,28 @@ Chart.register(...registerables);
       <div class="resumen-section" *ngIf="resumenGeneral">
         <div class="stat-card">
           <h3>🏛️ Total Facultades</h3>
-          <span class="stat-value">{{ resumenGeneral?.total_facultades || 0 }}</span>
+          <span class="stat-value">{{
+            resumenGeneral?.total_facultades || 0
+          }}</span>
         </div>
         <div class="stat-card">
           <h3>📈 Promedio General</h3>
           <span class="stat-value"
-            >{{ (resumenGeneral?.promedio_general || 0) | number : '1.1-1' }}°C</span
+            >{{
+              resumenGeneral?.promedio_general || 0 | number : '1.1-1'
+            }}°C</span
           >
         </div>
         <div class="stat-card">
           <h3>🚨 Total Alertas</h3>
-          <span class="stat-value">{{ resumenGeneral?.alertas_totales || 0 }}</span>
+          <span class="stat-value">{{
+            resumenGeneral?.alertas_totales || 0
+          }}</span>
         </div>
         <div class="stat-card">
           <h3>⏰ Última Actualización</h3>
           <span class="stat-value">{{
-            (resumenGeneral?.ultima_actualizacion || '---') | date : 'HH:mm:ss'
+            resumenGeneral?.ultima_actualizacion || '---' | date : 'HH:mm:ss'
           }}</span>
         </div>
       </div>
@@ -135,7 +148,10 @@ Chart.register(...registerables);
       </div>
 
       <!-- Gráfico de Tendencias -->
-      <div class="grafico-section" *ngIf="historialData && historialData.length > 0">
+      <div
+        class="grafico-section"
+        *ngIf="historialData && historialData.length > 0"
+      >
         <h2>📈 Tendencias de Temperatura</h2>
         <div class="chart-container">
           <canvas #historialChart width="800" height="400"></canvas>
@@ -143,7 +159,10 @@ Chart.register(...registerables);
       </div>
 
       <!-- Tabla de Historial Detallado -->
-      <div class="historial-detalle" *ngIf="historialData && historialData.length > 0">
+      <div
+        class="historial-detalle"
+        *ngIf="historialData && historialData.length > 0"
+      >
         <h2>📄 Historial Detallado</h2>
         <div class="tabla-historial">
           <table>
@@ -188,7 +207,10 @@ Chart.register(...registerables);
       </div>
 
       <!-- Mensaje cuando no hay datos -->
-      <div class="no-data" *ngIf="!cargando && (!historialData || historialData.length === 0)">
+      <div
+        class="no-data"
+        *ngIf="!cargando && (!historialData || historialData.length === 0)"
+      >
         <h3>📭 No hay datos disponibles</h3>
         <p>No se encontraron registros para los filtros seleccionados.</p>
       </div>
@@ -196,7 +218,8 @@ Chart.register(...registerables);
   `,
 })
 export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('historialChart', { static: false }) historialChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('historialChart', { static: false })
+  historialChartRef!: ElementRef<HTMLCanvasElement>;
 
   historialData: HistorialFacultad[] = [];
   estadisticasFacultades: EstadisticasFacultad[] = [];
@@ -298,11 +321,11 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
 
   cargarHistorial(): void {
     this.cargando = true;
-    
+
     console.log('🔍 Cargando historial con parámetros:', {
       fechaInicio: this.fechaInicio,
       fechaFin: this.fechaFin,
-      facultadSeleccionada: this.facultadSeleccionada
+      facultadSeleccionada: this.facultadSeleccionada,
     });
 
     if (this.fechaInicio && this.fechaFin) {
@@ -415,7 +438,11 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    console.log('Actualizando gráfico con', this.historialData.length, 'registros');
+    console.log(
+      'Actualizando gráfico con',
+      this.historialData.length,
+      'registros'
+    );
 
     // Destruir gráfico anterior si existe
     if (this.chart) {
@@ -424,25 +451,35 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Preparar datos para el gráfico
     const datos = this.historialData.slice(0, 20).reverse(); // Últimos 20 registros
-    const labels = datos.map(d => new Date(d.fecha).toLocaleString('es', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }));
-    const facultades = datos.map(d => d.facultad_nombre);
+    const labels = datos.map((d) =>
+      new Date(d.fecha).toLocaleString('es', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    );
+    const facultades = datos.map((d) => d.facultad_nombre);
 
     // Crear datasets por facultad
     const facultadesUnicas = [...new Set(facultades)];
     const colores = [
-      '#667eea', '#764ba2', '#f093fb', '#f5576c', 
-      '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'
+      '#667eea',
+      '#764ba2',
+      '#f093fb',
+      '#f5576c',
+      '#4facfe',
+      '#00f2fe',
+      '#43e97b',
+      '#38f9d7',
     ];
 
     const datasets = facultadesUnicas.map((facultad, index) => {
       const datosFacultad = datos
-        .map((d, i) => d.facultad_nombre === facultad ? { x: i, y: d.temperatura } : null)
-        .filter(d => d !== null);
+        .map((d, i) =>
+          d.facultad_nombre === facultad ? { x: i, y: d.temperatura } : null
+        )
+        .filter((d) => d !== null);
 
       return {
         label: facultad,
@@ -451,18 +488,18 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
         backgroundColor: colores[index % colores.length] + '20',
         borderWidth: 2,
         fill: false,
-        tension: 0.4
+        tension: 0.4,
       };
     });
 
     // Crear gráfico usando ViewChild
     const canvas = this.historialChartRef.nativeElement;
-    
+
     this.chart = new Chart(canvas, {
       type: 'line',
       data: {
         labels: labels,
-        datasets: datasets
+        datasets: datasets,
       },
       options: {
         responsive: true,
@@ -471,41 +508,41 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
           title: {
             display: true,
             text: 'Tendencias de Temperatura por Facultad',
-            font: { size: 16, weight: 'bold' }
+            font: { size: 16, weight: 'bold' },
           },
           legend: {
             display: true,
-            position: 'top'
-          }
+            position: 'top',
+          },
         },
         scales: {
           y: {
             beginAtZero: false,
             title: {
               display: true,
-              text: 'Temperatura (°C)'
+              text: 'Temperatura (°C)',
             },
             grid: {
-              color: '#e2e8f0'
-            }
+              color: '#e2e8f0',
+            },
           },
           x: {
             title: {
               display: true,
-              text: 'Fecha y Hora'
+              text: 'Fecha y Hora',
             },
             grid: {
-              color: '#e2e8f0'
-            }
-          }
+              color: '#e2e8f0',
+            },
+          },
         },
         elements: {
           point: {
             radius: 4,
-            hoverRadius: 6
-          }
-        }
-      }
+            hoverRadius: 6,
+          },
+        },
+      },
     });
 
     console.log('✅ Gráfico actualizado exitosamente');
