@@ -95,7 +95,7 @@ interface Facultad {
           <div class="estudiante-body">
             <div class="estudiante-head">👨‍🎓</div>
             <div class="estudiante-status">
-              <span *ngIf="estadoEstudiante === 'esperando'">💤</span>
+              <span *ngIf="estadoEstudiante === 'esperando'">fabri</span>
               <span *ngIf="estadoEstudiante === 'caminando'">🚶‍♂️</span>
               <span *ngIf="estadoEstudiante === 'midiendo'">🌡️</span>
               <span *ngIf="estadoEstudiante === 'alerta'">🚨</span>
@@ -329,11 +329,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     {
       id: 'fti',
       nombre: 'Facultad de Tecnologías de la Información',
-      nombreCorto: 'FTI',
+      nombreCorto: 'TI',
       icono: '💻',
       emoji: '💻',
       color: '#3B82F6',
-      posicion: { x: 150, y: 120 },
+      posicion: { x: 550, y: 200 },
       tempRange: { min: 20, max: 26 },
       visitada: false,
     },
@@ -344,7 +344,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icono: '🏥',
       emoji: '🏥',
       color: '#EF4444',
-      posicion: { x: 450, y: 160 },
+      posicion: { x: 850, y: 160 },
       tempRange: { min: 22, max: 25 },
       visitada: false,
     },
@@ -355,7 +355,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icono: '✈️',
       emoji: '✈️',
       color: '#10B981',
-      posicion: { x: 750, y: 140 },
+      posicion: { x: 1550, y: 140 },
       tempRange: { min: 19, max: 28 },
       visitada: false,
     },
@@ -366,7 +366,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icono: '📚',
       emoji: '📚',
       color: '#F59E0B',
-      posicion: { x: 250, y: 320 },
+      posicion: { x: 690, y: 320 },
       tempRange: { min: 21, max: 27 },
       visitada: false,
     },
@@ -377,7 +377,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icono: '🏗️',
       emoji: '🏗️',
       color: '#8B5CF6',
-      posicion: { x: 550, y: 350 },
+      posicion: { x: 1050, y: 350 },
       tempRange: { min: 23, max: 30 },
       visitada: false,
     },
@@ -388,7 +388,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       icono: '🗣️',
       emoji: '🗣️',
       color: '#EC4899',
-      posicion: { x: 650, y: 180 },
+      posicion: { x: 1300, y: 180 },
       tempRange: { min: 20, max: 25 },
       visitada: false,
     },
@@ -652,7 +652,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.particulas = [];
     for (let i = 0; i < 15; i++) {
       this.particulas.push({
-        x: Math.random() * 800,
+        x: Math.random() * 1650,
         y: Math.random() * 400,
         symbol: ['🌿', '🌸', '🦋', '☀️', '🌤️'][Math.floor(Math.random() * 5)],
         delay: Math.random() * 3,
