@@ -531,11 +531,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .historial-container {
-    padding: 16px 0;
-  }
-  
-  .historial-container > * {
-    margin: 0 16px;
+    padding: 16px;
   }
   
   .filtros-section {
