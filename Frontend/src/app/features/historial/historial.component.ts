@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
+import jsPDF from 'jspdf';
 import {
   HistorialService,
   HistorialFacultad,
@@ -402,27 +403,310 @@ export class HistorialComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   exportarDatos(): void {
-    this.historialService
-      .exportarHistorial(this.facultadSeleccionada || undefined, 'json')
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            // Crear y descargar archivo
-            const blob = new Blob([JSON.stringify(response.data, null, 2)], {
-              type: 'application/json',
-            });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `historial-uleam-${Date.now()}.json`;
-            link.click();
-            window.URL.revokeObjectURL(url);
-          }
-        },
-        error: (error) => {
-          console.error('Error exportando datos:', error);
-        },
+    // Generar PDF directamente con los datos actuales
+    this.generarPDF();
+  }
+
+  private generarPDF(): void {
+    const doc = new jsPDF();
+
+    // Configurar fuente
+    doc.setFont('helvetica');
+
+    const fechaActual = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const facultadTexto = this.facultadSeleccionada
+      ? this.facultades.find((f) => f.id === this.facultadSeleccionada)
+          ?.nombre || 'Facultad Seleccionada'
+      : 'Todas las Facultades';
+
+    let yPosition = 20;
+
+    // HEADER
+    doc.setFontSize(18);
+    doc.setTextColor(59, 130, 246); // Azul
+    doc.text('REPORTE DE TEMPERATURAS IOT', 20, yPosition);
+    yPosition += 8;
+
+    doc.setFontSize(14);
+    doc.setTextColor(16, 185, 129); // Verde
+    doc.text('Universidad Laica Eloy Alfaro de Manabi (ULEAM)', 20, yPosition);
+    yPosition += 6;
+
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Sistema de Monitoreo Ambiental por Facultades', 20, yPosition);
+    yPosition += 15;
+
+    // LÍNEA SEPARADORA
+    doc.setDrawColor(59, 130, 246);
+    doc.line(20, yPosition, 190, yPosition);
+    yPosition += 10;
+
+    // INFORMACIÓN DEL REPORTE
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Fecha de Generacion: ' + fechaActual, 20, yPosition);
+    yPosition += 6;
+    doc.text('Alcance del Reporte: ' + facultadTexto, 20, yPosition);
+    yPosition += 15;
+
+    // RESUMEN EJECUTIVO
+    if (this.resumenGeneral) {
+      doc.setFontSize(14);
+      doc.setTextColor(59, 130, 246);
+      doc.text('RESUMEN EJECUTIVO', 20, yPosition);
+      yPosition += 8;
+
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text(
+        'Total Facultades: ' + (this.resumenGeneral.total_facultades || 0),
+        20,
+        yPosition
+      );
+      yPosition += 5;
+      doc.text(
+        'Promedio General: ' +
+          (this.resumenGeneral.promedio_general || 0).toFixed(1) +
+          'C',
+        20,
+        yPosition
+      );
+      yPosition += 5;
+      doc.text(
+        'Total Alertas: ' + (this.resumenGeneral.alertas_totales || 0),
+        20,
+        yPosition
+      );
+      yPosition += 5;
+      doc.text(
+        'Total Mediciones: ' + (this.historialData?.length || 0),
+        20,
+        yPosition
+      );
+      yPosition += 15;
+    }
+
+    // ESTADÍSTICAS POR FACULTAD
+    if (this.estadisticasFacultades && this.estadisticasFacultades.length > 0) {
+      doc.setFontSize(14);
+      doc.setTextColor(59, 130, 246);
+      doc.text('ESTADISTICAS POR FACULTAD', 20, yPosition);
+      yPosition += 10;
+
+      // Headers de la tabla
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(59, 130, 246);
+      doc.rect(20, yPosition - 3, 170, 6, 'F');
+      doc.text('Facultad', 22, yPosition);
+      doc.text('Promedio', 90, yPosition);
+      doc.text('Min.', 110, yPosition);
+      doc.text('Max.', 125, yPosition);
+      doc.text('Mediciones', 140, yPosition);
+      doc.text('Alertas', 170, yPosition);
+      yPosition += 6;
+
+      // Datos de la tabla
+      doc.setTextColor(0, 0, 0);
+      this.estadisticasFacultades.forEach((stat, index) => {
+        if (yPosition > 270) {
+          // Nueva página si es necesario
+          doc.addPage();
+          yPosition = 20;
+        }
+
+        // Alternar color de fondo
+        if (index % 2 === 0) {
+          doc.setFillColor(248, 250, 252);
+          doc.rect(20, yPosition - 3, 170, 5, 'F');
+        }
+
+        const facultadNombre =
+          stat.facultad_nombre.length > 25
+            ? stat.facultad_nombre.substring(0, 25) + '...'
+            : stat.facultad_nombre;
+
+        doc.text(facultadNombre, 22, yPosition);
+        doc.text(stat.promedio.toFixed(1) + 'C', 90, yPosition);
+        doc.text(stat.temperatura_minima.toFixed(1) + 'C', 110, yPosition);
+        doc.text(stat.temperatura_maxima.toFixed(1) + 'C', 125, yPosition);
+        doc.text(stat.total_mediciones.toString(), 140, yPosition);
+
+        // Alertas en rojo si hay
+        if (stat.alertas_generadas > 0) {
+          doc.setTextColor(239, 68, 68);
+          doc.text(stat.alertas_generadas.toString(), 170, yPosition);
+          doc.setTextColor(0, 0, 0);
+        } else {
+          doc.text('0', 170, yPosition);
+        }
+
+        yPosition += 5;
       });
+
+      yPosition += 10;
+    }
+
+    // HISTORIAL DETALLADO
+    if (this.historialData && this.historialData.length > 0) {
+      if (yPosition > 250) {
+        // Nueva página si es necesario
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setTextColor(59, 130, 246);
+      doc.text('HISTORIAL DETALLADO DE MEDICIONES', 20, yPosition);
+      yPosition += 10;
+
+      // Headers de la tabla
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(59, 130, 246);
+      doc.rect(20, yPosition - 3, 170, 6, 'F');
+      doc.text('Fecha y Hora', 22, yPosition);
+      doc.text('Facultad', 60, yPosition);
+      doc.text('Temp.', 110, yPosition);
+      doc.text('Sensor', 130, yPosition);
+      doc.text('Estado', 160, yPosition);
+      yPosition += 6;
+
+      // Datos de la tabla (máximo 20 registros)
+      doc.setTextColor(0, 0, 0);
+      const datosParaPDF = this.historialData.slice(0, 20);
+
+      datosParaPDF.forEach((registro, index) => {
+        if (yPosition > 270) {
+          // Nueva página si es necesario
+          doc.addPage();
+          yPosition = 20;
+
+          // Repetir headers en nueva página
+          doc.setFontSize(8);
+          doc.setTextColor(255, 255, 255);
+          doc.setFillColor(59, 130, 246);
+          doc.rect(20, yPosition - 3, 170, 6, 'F');
+          doc.text('Fecha y Hora', 22, yPosition);
+          doc.text('Facultad', 60, yPosition);
+          doc.text('Temp.', 110, yPosition);
+          doc.text('Sensor', 130, yPosition);
+          doc.text('Estado', 160, yPosition);
+          yPosition += 6;
+        }
+
+        // Alternar color de fondo
+        if (index % 2 === 0) {
+          doc.setFillColor(248, 250, 252);
+          doc.rect(20, yPosition - 3, 170, 5, 'F');
+        }
+
+        const fechaFormateada = new Date(registro.fecha).toLocaleString(
+          'es-ES',
+          {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          }
+        );
+
+        const facultadNombre =
+          registro.facultad_nombre.length > 20
+            ? registro.facultad_nombre.substring(0, 20) + '...'
+            : registro.facultad_nombre;
+
+        const esAlerta = registro.temperatura > 30;
+
+        doc.setTextColor(0, 0, 0);
+        doc.text(fechaFormateada, 22, yPosition);
+        doc.text(facultadNombre, 60, yPosition);
+
+        // Temperatura en rojo si es alerta
+        if (esAlerta) {
+          doc.setTextColor(239, 68, 68);
+          doc.text(registro.temperatura + 'C', 110, yPosition);
+          doc.setTextColor(0, 0, 0);
+        } else {
+          doc.text(registro.temperatura + 'C', 110, yPosition);
+        }
+
+        doc.text(registro.sensor_id, 130, yPosition);
+
+        // Estado
+        if (esAlerta) {
+          doc.setTextColor(239, 68, 68);
+          doc.text('ALERTA', 160, yPosition);
+          doc.setTextColor(0, 0, 0);
+        } else {
+          doc.setTextColor(16, 185, 129);
+          doc.text('NORMAL', 160, yPosition);
+          doc.setTextColor(0, 0, 0);
+        }
+
+        yPosition += 5;
+      });
+
+      if (this.historialData.length > 20) {
+        yPosition += 5;
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(
+          'Mostrando los 20 registros mas recientes de ' +
+            this.historialData.length +
+            ' total',
+          20,
+          yPosition
+        );
+      }
+    }
+
+    // FOOTER EN TODAS LAS PÁGINAS
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+
+      // Línea separadora del footer
+      doc.setDrawColor(226, 232, 240);
+      doc.line(20, 280, 190, 280);
+
+      // Footer
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Sistema de Monitoreo IoT - ULEAM', 20, 285);
+      doc.text('Generado automaticamente el ' + fechaActual, 20, 290);
+      doc.text(
+        'Datos de sensores de temperatura distribuidos por facultades',
+        20,
+        295
+      );
+
+      // Número de página
+      doc.text('Pagina ' + i + ' de ' + pageCount, 170, 295);
+    }
+
+    // Generar nombre del archivo
+    const nombreArchivo = `Reporte_Temperaturas_ULEAM_${new Date().getFullYear()}_${(
+      new Date().getMonth() + 1
+    )
+      .toString()
+      .padStart(2, '0')}_${new Date()
+      .getDate()
+      .toString()
+      .padStart(2, '0')}.pdf`;
+
+    // Descargar el PDF
+    doc.save(nombreArchivo);
+
+    console.log('✅ PDF descargado exitosamente:', nombreArchivo);
   }
 
   private actualizarGrafico(): void {
